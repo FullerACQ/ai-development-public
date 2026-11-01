@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+# Point coding-agent configuration at this checkout without replacing real files.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SKILLS="$ROOT/skills"
+warnings=0
+
+warn() { echo "WARN: $*" >&2; warnings=$((warnings + 1)); }
+
+link() {
+  local target="$1" path="$2"
+  [ -e "$target" ] || { warn "missing source: $target"; return 0; }
+  mkdir -p "$(dirname "$path")"
+  if [ -L "$path" ]; then
+    [ "$(readlink "$path")" = "$target" ] && return 0
+    rm "$path"
+  elif [ -e "$path" ]; then
+    warn "$path is a real file/dir, not replacing"
+    return 0
+  fi
+  ln -s "$target" "$path"
+  echo "linked $path -> $target"
+}
+
+link_each() {
+  local src="$1" dest="$2" entry
+  mkdir -p "$dest"
+  for entry in "$src"/*; do
+    [ -e "$entry" ] || [ -L "$entry" ] || continue
+    link "$entry" "$dest/$(basename "$entry")"
+  done
+  for entry in "$dest"/*; do
+    if [ -L "$entry" ] && [[ "$(readlink "$entry")" == "$src/"* ]] && [ ! -e "$entry" ]; then
+      rm "$entry"
+      echo "pruned $entry"
+    fi
+  done
+}
+
+# Per-skill links coexist with other installers in Claude's real directory.
+link "$SKILLS" "$HOME/.agents/skills"
+link "$ROOT/skill-lock.json" "$HOME/.agents/.skill-lock.json"
+link_each "$SKILLS" "$HOME/.claude/skills"
+link_each "$SKILLS" "$HOME/.cursor/skills"
+link_each "$SKILLS" "$HOME/.codex/skills"
+
+link "$ROOT/AGENTS.md" "$HOME/.claude/CLAUDE.md"
+link "$ROOT/AGENTS.md" "$HOME/.codex/AGENTS.md"
+link "$ROOT/AGENTS.md" "$HOME/.pi/agent/AGENTS.md"
+link "$ROOT/AGENTS.md" "$HOME/.gemini/config/AGENTS.md"
+
+link_each "$ROOT/commands" "$HOME/.claude/commands"
+link_each "$ROOT/commands" "$HOME/.codex/commands"
+link_each "$ROOT/commands" "$HOME/.pi/agent/prompts"
+link_each "$ROOT/agents/claude" "$HOME/.claude/agents"
+link "$ROOT/hooks/claude" "$HOME/.claude/hooks"
+
+if [ "$warnings" -gt 0 ]; then
+  echo "done with $warnings warning(s)" >&2
+  exit 1
+fi
+echo "done"

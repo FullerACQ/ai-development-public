@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+.claude/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+opencode/package.json
+opencode/package-lock.json
+opencode/bun.lock
+opencode/auth.json
+opencode/*token*
