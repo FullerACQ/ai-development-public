@@ -1,0 +1,17 @@
+{
+  "name": "acq-opencode-tui-plugins",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test ./chat-links",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opencode-ai/plugin": "1.18.34",
+    "@opentui/core": "0.4.5"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.11",
+    "typescript": "5.9.3"
+  }
+}

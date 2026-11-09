@@ -35,6 +35,7 @@ commands/          prompt templates
 agents/claude/     Claude Code subagent definitions
 hooks/             optional hook scripts and OpenCode plugins
 opencode/          minimal OpenCode configuration
+opencode/tui/      OpenCode TUI plugins
 bin/link           idempotent symlink installer
 shell/develop.zsh  installed-agent picker
 licenses/          upstream license texts
@@ -59,11 +60,20 @@ Hook wiring differs between agent tools. Claude hook scripts are installed by
 OpenCode loads the plugins in `opencode/plugins` automatically when
 `OPENCODE_CONFIG_DIR` points at this repository's `opencode` directory.
 
-The included OpenCode plugins provide cmux status, a PR simplification reminder,
-and a Slack message guard. The Slack guard labels outgoing messages with 🤖 and
+The included OpenCode plugins provide cmux status, model retry/error/stall
+toasts, a PR simplification reminder, and a Slack message guard. The Slack guard
+labels outgoing messages with 🤖 and
 rejects greetings, first-person messages, and lengthy commentary. The sample
 config requests approval for message sends. Configure MCP connections and
 credentials in your own local configuration.
+
+`opencode/tui.json` registers the TUI plugins in `opencode/tui`:
+
+- `chat-links.ts` — Cmd-click links in chat and inline GitHub PR status; see
+  `opencode/tui/README.md`.
+- `my-open-prs.tsx` — sidebar list of your open PRs in the current repository,
+  via the `gh` CLI.
+- `last-prompt.tsx` — pins your last prompt to the top row of a session.
 
 Run the hook checks with:
 
@@ -71,6 +81,7 @@ Run the hook checks with:
 node --test hooks/tests/*.test.mjs tests/*.test.mjs
 bash -n bin/link hooks/claude/*.sh
 zsh -n shell/develop.zsh
+(cd opencode/tui && bun install && bun run typecheck && bun test ./chat-links)
 ```
 
 ## Publication scope and attribution
